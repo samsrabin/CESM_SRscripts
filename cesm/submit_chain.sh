@@ -10,7 +10,8 @@ elif [[ ! -e "${chainspec}" ]]; then
     echo "chainspec file not found: ${chainspec}"
     exit 1
 fi
-. ${chainspec}
+cd "$(realpath "$(dirname "${chainspec}")")"
+. "$(basename "${chainspec}")"
 
 # Check chain specification file
 if [[ ${#list_cases[@]} -ne ${#list_deps[@]} ]]; then
