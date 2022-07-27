@@ -65,8 +65,13 @@ segment_lengths=()
 case_lengths=()
 start_dates=()
 start_dates_orig=()
-state_dates=()
 start_datefs=()
+ref_dates=()
+ref_dates_orig=()
+ref_datefs=()
+ref_cases=()
+ref_cases_orig=()
+state_dates=()
 state_datefs=()
 date_units=()
 run_types=()
@@ -185,14 +190,14 @@ for c in "${!list_cases[@]}"; do
     fi
     date_units+=(${date_unit})
 
-    # Get start date
+    # Get start and ref dates
     start_date=$(./xmlquery RUN_STARTDATE | grep -oE "[0-9\-]+" | sed "s/-//g")
     start_dates_orig+=(${start_date})
     start_datef=$(date_to_datef "${start_date}")
     if [[ "${thisdep}" != "" ]]; then
         if [[ ${parent_state_date} -ne ${start_date} ]]; then
             while true; do
-                read -p "    Do you want to overwrite existing start date (${start_datef}) with ${parent_state_datef}? " yn
+                read -p "    Do you want to temporarily overwrite existing start date (${start_datef}) with ${parent_state_datef}? " yn
                 case $yn in
                     [Yy]* ) break;;
                     [Nn]* ) echo "Exiting."; exit 1;;
@@ -202,6 +207,36 @@ for c in "${!list_cases[@]}"; do
             start_date=${parent_state_date}
             start_datef=${parent_state_datef}
         fi
+        ref_date=$(./xmlquery RUN_REFDATE | grep -oE "[0-9\-]+" | sed "s/-//g")
+        ref_dates_orig+=(${ref_date})
+        ref_datef=$(date_to_datef "${ref_date}")
+        if [[ ${parent_state_date} -ne ${ref_date} ]]; then
+            while true; do
+                read -p "    Do you want to temporarily overwrite existing ref date (${ref_datef}) with ${parent_state_datef}? " yn
+                case $yn in
+                    [Yy]* ) break;;
+                    [Nn]* ) echo "Exiting."; exit 1;;
+                    * ) echo "Please answer yes or no.";;
+                esac
+            done
+            ref_date=${parent_state_date}
+            ref_datef=${parent_state_datef}
+        fi
+        ref_cases+=(${ref_case})
+        ref_case=$(./xmlquery RUN_REFCASE | awk 'NF>1{print $NF}')
+        ref_cases_orig+=(${ref_case})
+        if [[ ${thisdep} != ${ref_case} ]]; then
+            while true; do
+                read -p "    Do you want to temporarily overwrite existing ref case (${ref_case}) with ${thisdep}? " yn
+                case $yn in
+                    [Yy]* ) break;;
+                    [Nn]* ) echo "Exiting."; exit 1;;
+                    * ) echo "Please answer yes or no.";;
+                esac
+            done
+            ref_case=${parent_state_case}
+        fi
+        ref_cases+=(${ref_case})
     fi
     start_dates+=(${start_date})
     start_datefs+=(${start_datef})
@@ -236,6 +271,11 @@ for c in "${!list_cases[@]}"; do
     start_date=${start_dates[c]}
     start_date_orig=${start_dates_orig[c]}
     start_datef=${start_datefs[c]}
+    ref_date=${ref_dates[c]}
+    ref_date_orig=${ref_dates_orig[c]}
+    ref_datef=${ref_datefs[c]}
+    ref_case=${ref_cases[c]}
+    ref_date_orig=${ref_dates_orig[c]}
     segment_length=${segment_lengths[c]}
     date_unit=${date_units[c]}
     continue_run=${continue_runs[c]}
@@ -260,6 +300,12 @@ for c in "${!list_cases[@]}"; do
 
         if [[ "${start_date}" != "${start_date_orig}" ]]; then
             ./xmlchange RUN_STARTDATE="${start_date}"
+        fi
+        if [[ "${ref_date}" != "${ref_date_orig}" ]]; then
+            ./xmlchange RUN_REFDATE="${ref_date}"
+        fi
+        if [[ "${ref_case}" != "${ref_case_orig}" ]]; then
+            ./xmlchange RUN_REFCASE="${ref_case}"
         fi
 
         # Get parent job ID
@@ -365,6 +411,12 @@ EOL
     # Reset to original values
     if [[ "${start_date}" != "${start_date_orig}" ]]; then
         ./xmlchange RUN_STARTDATE="${start_date_orig}"
+    fi
+    if [[ "${ref_date}" != "${ref_date_orig}" ]]; then
+        ./xmlchange RUN_REFDATE="${ref_date_orig}"
+    fi
+    if [[ "${ref_case}" != "${ref_case_orig}" ]]; then
+        ./xmlchange RUN_REFCASE="${ref_case_orig}"
     fi
     if [[ "${continue_run}" != "${continue_run_orig}" ]]; then
         ./xmlchange CONTINUE_RUN="${continue_run_orig}"
