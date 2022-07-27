@@ -180,6 +180,8 @@ for c in "${!list_cases[@]}"; do
     case_lengths+=(${case_length})
     if [[ "${stop_option}" == "nday"* ]]; then
         date_unit="days"
+        echo "Using STOP_OPTION ${stop_option} can cause issues with leap days. Currently not supported."
+        exit 1
     elif [[ "${stop_option}" == "nmonth"* ]]; then
         date_unit="months"
     elif [[ "${stop_option}" == "nyear"* ]]; then
