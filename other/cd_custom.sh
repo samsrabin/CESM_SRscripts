@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Customize this: the directory in your $HOME folder where you set up your cases.
+# Mine is $HOME/cases_ctsm, so:
+home_casedir="cases_ctsm"
+
 dest_codes=("cases" "st_archive" "run")
 
 dest="${1}"
@@ -16,8 +20,8 @@ n_logname=0
 
 # In $HOME/cases
 # Only works on user's home directory, not anyone else's
-if [[ "${PWD}" == *"${HOME}/cases_ctsm"* ]]; then
-    #echo "In \$HOME/cases_ctsm"
+if [[ "${PWD}" == *"${HOME}/${home_casedir}"* ]]; then
+    #echo "In \$HOME/${home_casedir}"
     n=7
     n_logname=5
 
@@ -52,10 +56,10 @@ fi
 already_there=0
 keep_going=1
 if [[ "${dest}" == "cases" ]]; then
-    dest_dir="${HOME}/cases_ctsm/${case}"
+    dest_dir="${HOME}/${home_casedir}/${case}"
     # Not robust to paths with spaces
     if [[ ! -d "${dest_dir}" ]]; then
-#        echo "Case not found in \$HOME/cases_ctsm. Looking in all \$HOME/*cases*"
+#        echo "Case not found in \$HOME/${home_casedir}. Looking in all \$HOME/*cases*"
 #         dest_dir="$(find $HOME  -type d -wholename "$HOME/*cases*/${case}")"
          dest_dir="$(find $HOME -maxdepth 2 -type d -wholename "$HOME/*cases*/${case}")"
 #        dest_dir="$(find $HOME -wholename "$HOME/*cases*/${case}" -and -not \( -wholename "*Buildconf*" -or -wholename "*CaseDocs*" -or -wholename "*cmake_macros*" -or -wholename "*LockedFiles*" -or -wholename "*logs*" -or -wholename "*SourceMods*" -or -wholename "*timing*" -or -wholename "*Tools*" \))"
