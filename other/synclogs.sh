@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-. $HOME/scripts/other/cd_custom.sh cases 1>/dev/null
+. cd_custom.sh cases 1>/dev/null
 casedir="$(pwd)"
 
 # Transfer logs from run directory
-. $HOME/scripts/other/cd_custom.sh run 1>/dev/null
+. cd_custom.sh run 1>/dev/null
 this_dir="$(pwd)"
 if [[ "${this_dir}" != "${casedir}" ]]; then
-    . $HOME/scripts/other/cd_custom.sh cases 1>/dev/null
+    . cd_custom.sh cases 1>/dev/null
     if compgen -G "*.log.*" > /dev/null; then
         mkdir -p "run_logs/incomplete"
         rsync -ahm --partial ${this_dir}/*.log.* run_logs/incomplete/
@@ -16,10 +16,10 @@ if [[ "${this_dir}" != "${casedir}" ]]; then
 fi
 
 # Transfer logs from archive directory
-. $HOME/scripts/other/cd_custom.sh st_archive 1>/dev/null 1>/dev/null
+. cd_custom.sh st_archive 1>/dev/null 1>/dev/null
 this_dir="$(pwd)"
 if [[ "${this_dir}" != "${casedir}" ]]; then
-    . $HOME/scripts/other/cd_custom.sh cases 1>/dev/null
+    . cd_custom.sh cases 1>/dev/null
     mkdir -p "run_logs/complete"
     rsync -ahm --partial "${this_dir}"/logs/*.log.* "run_logs/complete/"
 fi
