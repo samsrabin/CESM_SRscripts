@@ -4,7 +4,7 @@ These are scripts I've put together for working with CESM on Cheyenne, as well a
 
 I'm happy to listen to feature requests or other issues that you submit, but can't guarantee I'll have the capacity to address them. Feel free to fork this repo, make changes, and submit pull requests!
 
-Aside from one Python script, these are all written in Bash, so if that's your shell of choice you can call them just by invoking their name. Otherwise `bash script_name.sh` should work? I don't know, I'm allergic to other shells (there's a "shell`fsh`" joke in there somewhere). Feel free to email me or submit an issue with better instructions.
+These are all written in Bash, so if that's your shell of choice you can call them just by invoking their name. Otherwise `bash script_name.sh` should work? I don't know, I'm allergic to other shells (there's a "shell`fsh`" joke in there somewhere). Feel free to email me or submit an issue with better instructions.
 
 Some of these depend on others, so make sure they're on your PATH. E.g., for Bash, add this to your `~/.bash_profile`:
 
