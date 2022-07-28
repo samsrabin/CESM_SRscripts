@@ -73,7 +73,7 @@ ref_cases=()
 ref_cases_orig=()
 state_dates=()
 state_datefs=()
-date_units=()
+stop_date_units=()
 run_types=()
 N_resubmits=()
 continue_runs=()
@@ -179,18 +179,35 @@ for c in "${!list_cases[@]}"; do
     case_length=$(((Nresubmit+1)*segment_length))
     case_lengths+=(${case_length})
     if [[ "${stop_option}" == "nday"* ]]; then
-        date_unit="days"
+        stop_date_unit="days"
         echo "Using STOP_OPTION ${stop_option} can cause issues with leap days. Currently not supported."
         exit 1
     elif [[ "${stop_option}" == "nmonth"* ]]; then
-        date_unit="months"
+        stop_date_unit="months"
     elif [[ "${stop_option}" == "nyear"* ]]; then
-        date_unit="years"
+        stop_date_unit="years"
     else
         echo "Not sure how to handle STOP_OPTION ${stop_option} in calculating state date"
         exit 1
     fi
-    date_units+=(${date_unit})
+    stop_date_units+=(${stop_date_unit})
+
+    # Get interval between restarts
+    rest_option=$(./xmlquery REST_OPTION | grep -oE "[a-z]+$")
+    rest_interval="$(./xmlquery REST_N | grep -oE "[0-9]+$")"
+    if [[ "${rest_option}" == "nday"* ]]; then
+        rest_date_unit="days"
+        echo "Using REST_OPTION ${rest_option} can cause issues with leap days. Currently not supported."
+        exit 1
+    elif [[ "${rest_option}" == "nmonth"* ]]; then
+        rest_date_unit="months"
+    elif [[ "${rest_option}" == "nyear"* ]]; then
+        rest_date_unit="years"
+    else
+        echo "Not sure how to handle REST_OPTION ${rest_option} in calculating state date"
+        exit 1
+    fi
+    rest_date_units+=(${rest_date_unit})
 
     # Get start and ref dates
     start_date=$(./xmlquery RUN_STARTDATE | grep -oE "[0-9\-]+" | sed "s/-//g")
@@ -246,14 +263,50 @@ for c in "${!list_cases[@]}"; do
 
     # Print run length/resubmit info
     if [[ ${Nresubmit} -gt 0 ]]; then
-        echo "    $((Nresubmit+1)) segments, each ${segment_lengths[c]} ${date_unit}"
+        echo "    $((Nresubmit+1)) segments, each ${segment_lengths[c]} ${stop_date_unit}"
     else
-        echo "    ${segment_lengths[c]} ${date_unit}"
+        echo "    ${segment_lengths[c]} ${stop_date_unit}"
     fi
 
-    # Get state year
-    state_datef="$(date --date "${start_datef} +${case_length} ${date_unit}" "+%Y-%m-%d")"
-    state_date="$(echo ${state_datef} | sed "s/-//g")"
+    # Get state date
+    state_datef_fromstop="$(date --date "${start_datef} +${case_length} ${stop_date_unit}" "+%Y-%m-%d")"
+    state_date_fromstop="$(echo ${state_datef_fromstop} | sed "s/-//g")"
+    state_datef_fromrest="$(date --date "$(date_to_datef ${start_date}) +${rest_interval} ${rest_date_unit}" "+%Y-%m-%d")"
+    state_date_fromrest="$(echo ${state_datef_fromrest} | sed "s/-//g")"
+    while [[ ${state_date_fromrest} -le ${state_date_fromstop} ]]; do
+        state_date_fromrest_latestok=${state_date_fromrest}
+        state_datef_fromrest="$(date --date "$(date_to_datef ${state_date_fromrest}) +${rest_interval} ${rest_date_unit}" "+%Y-%m-%d")"
+        state_date_fromrest="$(echo ${state_datef_fromrest} | sed "s/-//g")"
+    done
+    if [[ ${state_date_fromrest_latestok} == "" ]]; then
+        echo "Cowardly refusing to let you do a run with no state saved. Do ./xmlchange REST_N=${segment_length},REST_OPTION=${stop_option} to at least save at the end of the run."
+        exit 1
+    fi
+    state_date_fromrest=${state_date_fromrest_latestok}
+    state_datef_fromrest="$(date_to_datef ${state_date_fromrest})"
+    if [[ ${state_date_fromrest} -ne ${state_date_fromstop} ]]; then
+        while true; do
+            read -p "    STOP_OPTION*STOP_N would produce state for ${state_datef_fromstop}, but last restart date from REST_OPTION*REST_N will be ${state_datef_fromrest}. Which do you want dependent runs to resume from, Stop or Rest? Or you can Abort. " sra
+            case $sra in
+                [Ss]* ) state_date=${state_date_fromstop}; break;;
+                [Rr]* ) state_date=${state_date_fromrest}; break;;
+                [Aa]* ) echo "Exiting."; exit 1;;
+                * ) echo "    Please answer Stop, Rest, or Abort";;
+            esac
+        done
+        while [[ ${state_date} -eq ${state_date_fromstop} ]]; do
+            read -p "    WARNING: This will permanently overwrite the current settings REST_N=${rest_interval},REST_OPTION=${rest_option} with the values from STOP_N=${segment_length},STOP_OPTION=${stop_option}. Continue? " yn
+            case $yn in
+                [Yy]* ) ./xmlchange REST_N=${segment_length},REST_OPTION=${stop_option}; break;;
+                [Nn]* ) echo "Exiting."; exit 1;;
+                * ) echo "    Please answer Yes or No.";;
+            esac
+        done
+        state_datef=$(date_to_datef ${state_date})
+    else
+        state_date=${state_date_fromstop}
+        state_datef=${state_datef_fromstop}
+    fi
     state_dates+=(${state_date})
     state_datefs+=(${state_datef})
     echo "    Produces state for ${state_datef}"
@@ -279,7 +332,6 @@ for c in "${!list_cases[@]}"; do
     ref_case=${ref_cases[c]}
     ref_date_orig=${ref_dates_orig[c]}
     segment_length=${segment_lengths[c]}
-    date_unit=${date_units[c]}
     continue_run=${continue_runs[c]}
     continue_run_orig=${continue_runs_orig[c]}
     run_type=${run_types[c]}
