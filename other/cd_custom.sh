@@ -2,7 +2,7 @@
 
 # Customize this: the directory in your $HOME folder where you set up your cases.
 # Mine is $HOME/cases_ctsm, so:
-home_casedir="cases_ctsm"
+home_casedir="cases"
 
 dest_codes=("cases" "st_archive" "run")
 
