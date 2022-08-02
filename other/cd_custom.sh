@@ -20,7 +20,7 @@ n_logname=0
 
 # In $HOME/cases
 # Only works on user's home directory, not anyone else's
-if [[ "${PWD}" == *"${HOME}/${home_casedir}"* ]]; then
+if [[ "${PWD}" == "${HOME}/${home_casedir}"* ]]; then
     #echo "In \$HOME/${home_casedir}"
     n=7
     n_logname=5
