@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+Nsec=${1:-10}
+watch -n "${Nsec}" qstat -w -u $USER
+
+exit 0

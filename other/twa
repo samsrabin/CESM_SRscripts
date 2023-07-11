@@ -1,0 +1,20 @@
+#!/bin/bash
+set -e
+
+Nsec="${1:-10}"
+shift
+passed_args="$@"
+
+script="./cs.status"
+if [[ ! -e "${script}" ]]; then
+    script="$(ls ./cs.status.[0-9]*)"
+fi
+Nfound=$(echo ${script} | wc -w)
+if [[ "${Nfound}" -ne 1 ]]; then
+    echo "${Nfound} matches found for ./cs.status.[0-9]*" >&2
+    exit 1
+fi
+
+watch -n ${Nsec} ${script} ${passed_args}
+
+exit 0
