@@ -18,6 +18,8 @@ if [[ "${Nfound}" -ne 1 ]]; then
     exit 1
 fi
 
-watch -n ${Nsec} ${script} ${passed_args}
+cmd="watch -n ${Nsec} ${script} ${passed_args}"
+echo $cmd
+$cmd
 
 exit 0
