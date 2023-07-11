@@ -2,8 +2,11 @@
 set -e
 
 Nsec="${1:-10}"
-shift
-passed_args="$@"
+passed_args=
+if [ "$#" -gt 0 ]; then
+    shift
+    passed_args="$@"
+fi
 
 script="./cs.status"
 if [[ ! -e "${script}" ]]; then
