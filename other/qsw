@@ -1,7 +1,14 @@
 #!/bin/bash
-set -e
 
 Nsec=${1:-10}
-watch -n "${Nsec}" qstat -w -u $USER
+
+cmd="qstat -w -u $USER"
+${cmd} 2>/dev/null
+if [[ $? -ne 0 ]]; then
+    # Try without qstat -w option
+    watch -n "${Nsec}" ${cmd/-w/}
+else
+    watch -n "${Nsec}" ${cmd}
+fi
 
 exit 0
