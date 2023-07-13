@@ -8,10 +8,7 @@ if [ "$#" -gt 0 ]; then
     passed_args="$@"
 fi
 
-script="./cs.status"
-if [[ ! -e "${script}" ]]; then
-    script="$(ls ./cs.status.[0-9]*)"
-fi
+script="$(get_cs.status)"
 Nfound=$(echo ${script} | wc -w)
 if [[ "${Nfound}" -ne 1 ]]; then
     echo "${Nfound} matches found for ./cs.status.[0-9]*" >&2

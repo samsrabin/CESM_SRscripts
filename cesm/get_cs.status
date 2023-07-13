@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+script="./cs.status"
+if [[ ! -e "${script}" ]]; then
+    script="$(ls ./cs.status.[0-9]*)"
+fi
+
+echo ${script}
+exit 0
