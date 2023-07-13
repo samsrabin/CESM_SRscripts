@@ -8,7 +8,7 @@ ${script} > ${tmpfile}
 grep -E "FAIL.*BASELINE.*DIFF" ${tmpfile} | awk '{print $2}' > accounted_for_truediffs
 grep -E "FAIL.*BASELINE exception" ${tmpfile} | awk '{print $2}' > accounted_for_baselineException
 grep -E "FAIL.*MODEL_BUILD" ${tmpfile} | awk '{print $2}' > accounted_for_modelBuild
-grep -E "FAIL.*RUN" ${tmpfile} | awk '{print $2}' > accounted_for_runFail
+grep -E "FAIL.*RUN" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_runFail
 grep -E "PASS.*BASELINE" ${tmpfile} | awk '{print $2}' > accounted_for_pass
 grep -E "FAIL.*BASELINE.*otherwise" ${tmpfile} | awk '{print $2}' > accounted_for_fieldlist
 grep -E "FAIL.*BASELINE.*some baseline files were missing" ${tmpfile} | awk '{print $2}' > accounted_for_missingBaselineFiles
