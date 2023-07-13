@@ -2,9 +2,10 @@
 
 Nsec=${1:-10}
 
+qstat_has_w=$(man qstat 2>/dev/null | grep "\[\-w\]" | wc -l)
+
 cmd="qstat -w -u $USER"
-${cmd} 2>/dev/null
-if [[ $? -ne 0 ]]; then
+if [[ ${qstat_has_w} -eq 0 ]]; then
     # Try without qstat -w option
     watch -n "${Nsec}" ${cmd/-w/}
 else
