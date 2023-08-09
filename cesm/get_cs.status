@@ -3,7 +3,16 @@ set -e
 
 script="./cs.status"
 if [[ ! -e "${script}" ]]; then
-    script="$(ls ./cs.status.[0-9]*)"
+    command="ls ./cs.status.[0-9]*"
+    printed=0
+    while ! ${command} 1>/dev/null 2>&1; do
+        if [[ ${printed} -eq 0 ]]; then
+            echo "Waiting for ./cs.status.[0-9]* file(s) to appear..." >&2
+            printed=1
+        fi
+        sleep 1
+    done
+    script="$(${command})"
 fi
 
 echo ${script}
