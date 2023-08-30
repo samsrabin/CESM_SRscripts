@@ -1,10 +1,12 @@
 #!/bin/bash
+set -e
 
 script="$(get_cs.status)"
 
 tmpfile=.test_summary.$(date "+%Y%m%d%H%M%S%N")
 ${script} > ${tmpfile}
 
+set +e
 grep -E "FAIL.*BASELINE.*DIFF" ${tmpfile} | awk '{print $2}' > accounted_for_truediffs
 grep -E "FAIL.*BASELINE exception" ${tmpfile} | awk '{print $2}' > accounted_for_baselineException
 grep -E "FAIL.*MODEL_BUILD" ${tmpfile} | awk '{print $2}' > accounted_for_modelBuild
@@ -15,6 +17,7 @@ grep -E "FAIL.*BASELINE.*some baseline files were missing" ${tmpfile} | awk '{pr
 grep -E "FAIL.*BASELINE.*baseline directory.*does not exist" ${tmpfile} | awk '{print $2}' > accounted_for_missingBaselineDir
 grep -E "EXPECTED FAILURE" ${tmpfile} | awk '{print $2}' > accounted_for_expectedFail
 grep -E "FAIL.*XML*" ${tmpfile} | awk '{print $2}' > accounted_for_xmlFail
+set -e
 
 for d in $(grep "Overall" ${tmpfile} | awk '{print $1}'); do [[ $(grep $d accounted_for* | wc -l) -eq 0 ]] && ${script} | grep $d; done > not_accounted_for
 
