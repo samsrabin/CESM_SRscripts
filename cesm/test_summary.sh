@@ -23,6 +23,7 @@ grep -E "FAIL.*XML*" ${tmpfile} | awk '{print $2}' > accounted_for_xmlFail
 
 # Account for pending tests
 [[ -e accounted_for_pend ]] && rm accounted_for_pend
+touch accounted_for_pend
 for t in $(grep -E "Overall: PEND" ${tmpfile} | awk '{print $1}' | sort); do
     if [[ $(grep $t accounted_for_expectedFail | wc -l) -eq 0 ]]; then
         echo $t >> accounted_for_pend
