@@ -16,7 +16,7 @@ grep -E "FAIL.*BASELINE.*baseline directory.*does not exist" ${tmpfile} | awk '{
 grep -E "EXPECTED FAILURE" ${tmpfile} | awk '{print $2}' > accounted_for_expectedFail
 grep -E "FAIL.*XML*" ${tmpfile} | awk '{print $2}' > accounted_for_xmlFail
 
-for d in $(grep "Overall" ${tmpfile} | awk '{print $1}'); do [[ $(grep $d accounted_for* | wc -l) -eq 0 ]] && ./cs.status | grep $d; done > not_accounted_for
+for d in $(grep "Overall" ${tmpfile} | awk '{print $1}'); do [[ $(grep $d accounted_for* | wc -l) -eq 0 ]] && ${script} | grep $d; done > not_accounted_for
 
 for f in *accounted*; do echo $f; cat $f; echo " "; done
 
