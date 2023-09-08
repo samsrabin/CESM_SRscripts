@@ -6,7 +6,10 @@ if [[ ! -e "${script}" ]]; then
     command="ls ./cs.status.[0-9]*"
     printed=0
     while ! ${command} 1>/dev/null 2>&1; do
-        if [[ ${printed} -eq 0 ]]; then
+        if compgen -G "STDERR*" > /dev/null; then
+            echo "STDERR file(s) found; stopping." >&2
+            exit 1
+        elif [[ ${printed} -eq 0 ]]; then
             echo "Waiting for ./cs.status.[0-9]* file(s) to appear..." >&2
             printed=1
         fi
