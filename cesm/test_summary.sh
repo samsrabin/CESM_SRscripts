@@ -12,6 +12,7 @@ set +e
 # Account for completed tests
 grep -E "FAIL.*BASELINE.*DIFF" ${tmpfile} | awk '{print $2}' > accounted_for_truediffs
 grep -E "FAIL.*BASELINE exception" ${tmpfile} | awk '{print $2}' > accounted_for_baselineException
+grep -E "FAIL.*SHAREDLIB_BUILD" ${tmpfile} | awk '{print $2}' > accounted_for_sharedlibBuild
 grep -E "FAIL.*MODEL_BUILD" ${tmpfile} | awk '{print $2}' > accounted_for_modelBuild
 grep -E "FAIL.*RUN" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_runFail
 grep -E "PASS.*BASELINE" ${tmpfile} | awk '{print $2}' > accounted_for_pass
