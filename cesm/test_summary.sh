@@ -10,17 +10,25 @@ ${script} > ${tmpfile}
 set +e
 
 # Account for completed tests
-grep -E "FAIL.*BASELINE.*DIFF" ${tmpfile} | awk '{print $2}' > accounted_for_truediffs
 grep -E "FAIL.*BASELINE exception" ${tmpfile} | awk '{print $2}' > accounted_for_baselineException
 grep -E "FAIL.*SHAREDLIB_BUILD" ${tmpfile} | awk '{print $2}' > accounted_for_sharedlibBuild
 grep -E "FAIL.*MODEL_BUILD" ${tmpfile} | awk '{print $2}' > accounted_for_modelBuild
 grep -E "FAIL.*RUN" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_runFail
 grep -E "PASS.*BASELINE" ${tmpfile} | awk '{print $2}' > accounted_for_pass
+grep -E "FAIL.*COMPARE_base_rest" ${tmpfile} | awk '{print $2}' > accounted_for_compareBaseRest
 grep -E "FAIL.*BASELINE.*otherwise" ${tmpfile} | awk '{print $2}' > accounted_for_fieldlist
 grep -E "FAIL.*BASELINE.*some baseline files were missing" ${tmpfile} | awk '{print $2}' > accounted_for_missingBaselineFiles
 grep -E "FAIL.*BASELINE.*baseline directory.*does not exist" ${tmpfile} | awk '{print $2}' > accounted_for_missingBaselineDir
 grep -E "EXPECTED FAILURE" ${tmpfile} | awk '{print $2}' > accounted_for_expectedFail
 grep -E "FAIL.*XML*" ${tmpfile} | awk '{print $2}' > accounted_for_xmlFail
+
+# Runs that fail because of restart diffs (can?) also show up as true baseline diffs. Only keep them as the former.
+[[ -e accounted_for_truediffs ]] && rm accounted_for_truediffs
+for e in $(grep -E "FAIL.*BASELINE.*DIFF" ${tmpfile} | awk '{print $2}'); do
+    if [[ $(grep ${e} accounted_for_compareBaseRest | wc -l) -eq 0 ]]; then
+        echo ${e} >> accounted_for_truediffs
+    fi
+done
 
 # Account for pending tests
 [[ -e accounted_for_pend ]] && rm accounted_for_pend
