@@ -15,37 +15,40 @@ if [[ "${dest}" == "" ]]; then
     return
 fi
 
-# Parse case
-n_logname=0
+if [[ "$SCRATCH" == "" ]]; then
+    echo "SCRATCH is unset. Fix this by specifying the path to your scratch directory with 'export SCRATCH=/path/to/your/scratch/dir'" >&2
+    exit 1
+fi
 
 # In $HOME/cases
 # Only works on user's home directory, not anyone else's
 if [[ "${PWD}" == "${HOME}/${home_casedir}"* ]]; then
     #echo "In \$HOME/${home_casedir}"
     n=7
-    n_logname=5
 
 # In short-term archive
-elif [[ "${PWD}" =~ /glade/scratch/[a-z]+/archive/.* ]]; then
+elif [[ "${PWD}" =~ ${SCRATCH}/archive/.* ]]; then
     #echo "In short-term archive"
-    n=6
-    n_logname=4
+    if [[ "${NCAR_HOST}" == "derecho" ]]; then
+        n=7
+    else
+        n=6
+    fi
 
 # In scratch
-elif [[ "${PWD}" =~ /glade/scratch/[a-z]+ ]]; then
+elif [[ "${PWD}" =~ ${SCRATCH}/[a-z]+ ]]; then
     #echo "In scratch"
-    n=5
-    n_logname=4
+    if [[ "${NCAR_HOST}" == "derecho" ]]; then
+        n=6
+    else
+        n=5
+    fi
 
 else
     echo "Unable to parse \$PWD"
     return
 fi
 case=$(echo $PWD | cut -d "/" -f $n)
-if [[ $n_logname -gt 0 ]]; then
-    logname=$(echo $PWD | cut -d "/" -f $n_logname)
-    #echo $logname
-fi
 
 if [[ "${case}" == "" ]]; then
     echo "Unable to parse case"
@@ -80,11 +83,11 @@ elif [[ "${dest}" == "st_archive" ]]; then
     if [[ "${case}" == "archive" ]]; then
         already_there=1
     fi
-    dest_dir="/glade/scratch/$logname/archive/${case}"
+    dest_dir="${SCRATCH}/archive/${case}"
 elif [[ "${dest}" == "run" ]]; then
-    dest_dir="/glade/scratch/$logname/${case}/run"
+    dest_dir="${SCRATCH}/${case}/run"
 elif [[ "${dest}" == "bld" ]]; then
-    dest_dir="/glade/scratch/$logname/${case}/bld"
+    dest_dir="${SCRATCH}/${case}/bld"
 else
     echo "What should target directory look like for dest ${dest} ?"
     return
