@@ -10,15 +10,18 @@ fi
 cd "${testmod_dir}"
 
 if [[ -f include_user_mods ]]; then
-    if [[ $(wc -l include_user_mods | cut -d" " -f1) -gt 1 ]]; then
-        echo "Expected one line in include_user_mods; got $(wc -l include_user_mods)" >&2
-        exit 1
-    fi
-    parent_mod_dir=$(cat include_user_mods)
-    trace_tests.sh "${parent_mod_dir}"
+    for parent_mod_dir in $(cat include_user_mods); do
+        trace_tests.sh "${parent_mod_dir}"
+    done
 fi
 
-basename $(realpath .)
+echo " "
+echo "=== $(basename $(realpath .)) ==="
+for f in *; do
+    echo $f
+    cat $f
+    echo " "
+done
 
 
 exit 0
