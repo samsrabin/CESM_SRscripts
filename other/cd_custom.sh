@@ -36,7 +36,7 @@ elif [[ "${PWD}" =~ ${SCRATCH}/archive/.* ]]; then
     fi
 
 # In scratch
-elif [[ "${PWD}" =~ ${SCRATCH}/[a-z]+ ]]; then
+elif [[ "${PWD}" =~ ${SCRATCH}/[a-z0-9]+ ]]; then
     #echo "In scratch"
     if [[ "${NCAR_HOST}" == "derecho" ]]; then
         n=6
