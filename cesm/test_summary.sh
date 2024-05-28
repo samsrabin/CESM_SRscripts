@@ -23,6 +23,9 @@ grep -E "FAIL.*BASELINE.*baseline directory.*does not exist" ${tmpfile} | awk '{
 grep -E "EXPECTED FAILURE" ${tmpfile} | awk '{print $2}' > accounted_for_expectedFail
 grep -E "FAIL.*XML*" ${tmpfile} | awk '{print $2}' > accounted_for_xmlFail
 
+# Add a file for tests that failed in NLCOMP, even if they're also in another accounted_for file
+grep -E "FAIL.*NLCOMP" ${tmpfile} | awk '{print $2}' > accounted_for_nlfail
+
 # Runs that fail because of restart diffs (can?) also show up as true baseline diffs. Only keep them as the former.
 [[ -e accounted_for_truediffs ]] && rm accounted_for_truediffs
 for e in $(grep -E "FAIL.*BASELINE.*DIFF" ${tmpfile} | awk '{print $2}'); do
