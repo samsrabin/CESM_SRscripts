@@ -6,7 +6,24 @@ if [[ "${test_dir}" != "" ]]; then
     cd "${test_dir}"
 fi
 
-endpattern=" ----------"
-sed -n "/NLCOMP\$/,/${endpattern}/{p;/^${endpattern}/q}" TestStatus.log
+function search_TestStatus {
+    endpattern=" ----------"
+    sed -n "/NLCOMP\$/,/${endpattern}/{p;/^${endpattern}/q}" TestStatus.log
+}
+
+if [[ -e TestStatus.log ]]; then
+    search_TestStatus
+elif [[ -e cs.status ]]; then
+    failing_tests="$(./cs.status | grep NLFAIL | cut -d" " -f3)"
+    for t in ${failing_tests}; do
+        echo $t
+        get_test_nlcomp_section.sh ${t}*
+        echo " "
+        echo " "
+    done
+else
+    echo "Neither TestStatus.log nor cs.status found in $PWD" >&2
+    exit 1
+fi
 
 exit 0
