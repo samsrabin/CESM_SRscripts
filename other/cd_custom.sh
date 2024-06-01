@@ -24,7 +24,8 @@ fi
 # Only works on user's home directory, not anyone else's
 if [[ "${PWD}" == "${HOME}/${home_casedir}"* ]]; then
     #echo "In \$HOME/${home_casedir}"
-    n=7
+    nslashes_home=$(echo $HOME | grep -oE / | wc -l)
+    n=$((nslashes_home + 3))
 
 # In short-term archive
 elif [[ "${PWD}" =~ ${SCRATCH}/archive/.* ]]; then
@@ -100,7 +101,7 @@ if [[ $keep_going -eq 1 ]]; then
    
    if [[ $already_there -eq 0 ]]; then
        if [[ ! -d "${dest_dir}" ]]; then
-           echo "Directory not found: ${dest_dir}"
+           echo "Directory not found: ${dest_dir}" >&2
        else
 #           echo $dest_dir
            cd "${dest_dir}"
