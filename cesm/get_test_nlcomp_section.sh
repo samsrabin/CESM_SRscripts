@@ -7,14 +7,14 @@ if [[ "${test_dir}" != "" ]]; then
 fi
 
 function search_TestStatus {
-    endpattern=" ----------"
-    sed -n "/NLCOMP\$/,/${endpattern}/{p;/^${endpattern}/q}" TestStatus.log
+    endpattern="----------"
+    sed -n "/NLCOMP\$/,/${endpattern}/{p;/${endpattern}/q}" TestStatus.log
 }
 
 if [[ -e TestStatus.log ]]; then
     search_TestStatus
 elif [[ -e cs.status ]]; then
-    failing_tests="$(./cs.status | grep NLFAIL | cut -d" " -f3)"
+    failing_tests="$(./cs.status | grep -oE "FAIL\s.*\sNLCOMP" | cut -d" " -f2)"
     for t in ${failing_tests}; do
         echo $t
         get_test_nlcomp_section.sh ${t}*
