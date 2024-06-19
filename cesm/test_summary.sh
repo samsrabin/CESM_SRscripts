@@ -17,6 +17,7 @@ grep -E "FAIL.*MODEL_BUILD" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' >
 grep -E "FAIL.*RUN" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_runFail
 grep -E "PASS.*BASELINE" ${tmpfile} | awk '{print $2}' > accounted_for_pass
 grep -E "FAIL.*COMPARE_base_rest" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_compareBaseRest
+grep -E "FAIL.*COMPARE_base_modpes" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_compareBaseModpes
 grep -E "FAIL.*BASELINE.*otherwise" ${tmpfile} | awk '{print $2}' > accounted_for_fieldlist
 grep -E "FAIL.*BASELINE.*some baseline files were missing" ${tmpfile} | awk '{print $2}' > accounted_for_missingBaselineFiles
 grep -E "FAIL.*BASELINE.*baseline directory.*does not exist" ${tmpfile} | awk '{print $2}' > accounted_for_missingBaselineDir
@@ -45,7 +46,22 @@ done
 
 set -e
 
-for d in $(grep "Overall" ${tmpfile} | awk '{print $1}'); do [[ $(grep $d accounted_for* | wc -l) -eq 0 ]] && ${script} | grep $d; done > not_accounted_for
+testlist="$(grep "Overall" ${tmpfile} | awk '{print $1}')"
+missing_tests="$(for d in ${testlist}; do [[ $(grep $d accounted_for* | wc -l) -eq 0 ]] && echo $d;  done)"
+truly_unaccounted=""
+for d in ${missing_tests}; do
+    n_fail_lines=$(grep $d ${tmpfile} | grep FAIL | grep -v "UNEXPECTED: expected FAIL" | wc -l)
+    if [[ ${n_fail_lines} -eq 0 ]]; then
+        echo $d >> accounted_for_pass
+    else
+        truly_unaccounted="${truly_unaccounted} $d"
+    fi
+done
+rm -f not_accounted_for
+touch not_accounted_for
+for d in ${truly_unaccounted}; do
+    grep $d ${tmpfile} >> not_accounted_for
+done
 
 for f in accounted*; do [[ $f == accounted_for_pend ]] && continue; echo $f; cat $f; echo " "; done
 
