@@ -50,11 +50,10 @@ testlist="$(grep "Overall" ${tmpfile} | awk '{print $1}')"
 
 missing_tests=
 for d in ${testlist}; do
-    if [[ $(grep $d accounted_for* | wc -l) -eq 0 ]]; then
-        missing_tests="${missing_tests} ${d}"
+    if [[ "$(grep $d accounted_for* | wc -l)" -eq 0 ]]; then
+        missing_tests="${missing_tests} $d"
     fi
 done
-
 
 truly_unaccounted=""
 for d in ${missing_tests}; do
