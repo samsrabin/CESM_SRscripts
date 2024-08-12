@@ -27,12 +27,18 @@ grep -E "FAIL.*XML*" ${tmpfile} | awk '{print $2}' > accounted_for_xmlFail
 # Add a file for tests that failed in NLCOMP, even if they're also in another accounted_for file
 grep -E "FAIL.*NLCOMP" ${tmpfile} | awk '{print $2}' > accounted_for_nlfail
 
-# Runs that fail because of restart diffs (can?) also show up as true baseline diffs. Only keep them as the former.
 [[ -e accounted_for_truediffs ]] && rm accounted_for_truediffs
 for e in $(grep -E "FAIL.*BASELINE.*DIFF" ${tmpfile} | awk '{print $2}'); do
-    if [[ $(grep ${e} accounted_for_compareBaseRest | wc -l) -eq 0 ]]; then
-        echo ${e} >> accounted_for_truediffs
+    # Runs that fail because of restart diffs (can?) also show up as true baseline diffs. Only keep them as the former.
+    if [[ $(grep ${e} accounted_for_compareBaseRest | wc -l) -gt 0 ]]; then
+        continue
     fi
+    # Some expected-fail runs complete but have diffs. Note those.
+    if [[ $(grep ${e} accounted_for_expectedFail | wc -l) -gt 0 ]]; then
+        echo "${e} (EXPECTED FAIL)" >> accounted_for_truediffs
+        continue
+    fi
+    echo ${e} >> accounted_for_truediffs
 done
 
 # Account for pending tests
