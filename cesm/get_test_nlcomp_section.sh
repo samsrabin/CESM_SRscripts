@@ -3,6 +3,18 @@ set -e
 
 test_dir="$1"
 if [[ "${test_dir}" != "" ]]; then
+    if [[ ! -d "${test_dir}" ]]; then
+        cmd="ls -d ${test_dir}*"
+        nfound=$(${cmd} 2>/dev/null | wc -l)
+        if [[ ${nfound} -eq 0 ]]; then
+            echo "Error: No directory found matching ${test_dir}*" >&2
+            exit 1
+        elif [[ ${nfound} -gt 1 ]]; then
+            echo "Error: Multiple matches for ${test_dir}*" >&2
+            exit 1
+        fi
+        test_dir=$(${cmd})
+    fi
     cd "${test_dir}"
 fi
 
