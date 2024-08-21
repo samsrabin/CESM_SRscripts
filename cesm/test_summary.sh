@@ -28,6 +28,7 @@ grep -E "FAIL.*XML*" ${tmpfile} | awk '{print $2}' > accounted_for_xmlFail
 grep -E "FAIL.*NLCOMP" ${tmpfile} | awk '{print $2}' > accounted_for_nlfail
 
 [[ -e accounted_for_truediffs ]] && rm accounted_for_truediffs
+touch accounted_for_truediffs
 for e in $(grep -E "FAIL.*BASELINE.*DIFF" ${tmpfile} | awk '{print $2}'); do
     # Runs that fail because of restart diffs (can?) also show up as true baseline diffs. Only keep them as the former.
     if [[ $(grep ${e} accounted_for_compareBaseRest | wc -l) -gt 0 ]]; then
