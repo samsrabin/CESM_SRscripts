@@ -1,10 +1,52 @@
 #!/bin/bash
 set -e
 
-script="$(get_cs.status)"
+#############################################################################################
+
+script="test_summary.sh"
+function usage {
+    echo " "
+    echo -e "usage: $script [-h|--help] [-n|--skip-nlfail] [-p|--skip-pending]\n"
+}
+
+# Set defaults
+skip_pending=0
+skip_nlfail=0
+
+# Args while-loop
+while [ "$1" != "" ];
+do
+    case $1 in
+
+        # Print help
+        -h | --help)
+            usage
+            exit 0
+            ;;
+
+        # Don't print NLFAIL tests
+        -n | --skip-nlfail)
+            skip_nlfail=1
+            ;;
+
+        # Don't print pending tests
+        -p  | --skip-pending)
+            skip_pending=1
+            ;;
+
+        *)
+            echo "$script: illegal option $1"
+            usage
+            exit 1 # error
+            ;;
+    esac
+    shift
+done
+
+#############################################################################################
 
 tmpfile=.test_summary.$(date "+%Y%m%d%H%M%S%N")
-${script} > ${tmpfile}
+$(get_cs.status) > ${tmpfile}
 
 # We don't want the script to exit if grep finds no matches
 set +e
@@ -77,12 +119,20 @@ for d in ${truly_unaccounted}; do
     grep $d ${tmpfile} >> not_accounted_for
 done
 
-for f in accounted*; do [[ $f == accounted_for_pend ]] && continue; echo $f; cat $f; echo " "; done
+for f in accounted*; do
+    [[ $f == accounted_for_pend ]] && continue
+    [[ $f == accounted_for_nlfail && ${skip_nlfail} -eq 1 ]] && continue
+    echo $f
+    cat $f
+    echo " "
+done
 
 # Print these last
-echo accounted_for_pend
-cat accounted_for_pend
-echo " "
+if [[ ${skip_pending} -eq 0 ]]; then
+    echo accounted_for_pend
+    cat accounted_for_pend
+    echo " "
+fi
 echo not_accounted_for
 cat not_accounted_for
 echo " "
