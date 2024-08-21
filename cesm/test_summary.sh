@@ -133,10 +133,25 @@ done
 
 for f in accounted*; do
     [[ $f == accounted_for_pend ]] && continue
-    [[ $f == accounted_for_nlfail && ${skip_nlfail} -eq 1 ]] && continue
+    if [[ $f == accounted_for_nlfail && ${skip_nlfail} -eq 1 ]]; then
+        echo $f
+        echo "   $(wc -l $f | cut -d" " -f1) tests had namelist diffs"
+        echo " "
+        continue
+    fi
     if [[ ${only_show_issues} -eq 1 ]]; then
-        [[ $f == accounted_for_pass ]] && continue
-        [[ $f == accounted_for_expectedFail ]] && continue
+        if [[ $f == accounted_for_pass ]]; then
+            echo $f
+            echo "   $(wc -l $f | cut -d" " -f1) tests passed"
+            echo " "
+            continue
+        fi
+        if [[ $f == accounted_for_expectedFail ]]; then
+            echo $f
+            echo "   $(wc -l $f | cut -d" " -f1) tests failed as expected"
+            echo " "
+            continue
+        fi
     fi
     echo $f
     cat $f
@@ -144,11 +159,13 @@ for f in accounted*; do
 done
 
 # Print these last
+echo accounted_for_pend
 if [[ ${skip_pending} -eq 0 && ${only_show_issues} -eq 0 ]]; then
-    echo accounted_for_pend
     cat accounted_for_pend
-    echo " "
+else
+    echo "   $(wc -l accounted_for_pend | cut -d" " -f1) tests pending"
 fi
+echo " "
 echo not_accounted_for
 cat not_accounted_for
 echo " "
