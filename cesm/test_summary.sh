@@ -6,12 +6,13 @@ set -e
 script="test_summary.sh"
 function usage {
     echo " "
-    echo -e "usage: $script [-h|--help] [-n|--skip-nlfail] [-p|--skip-pending]\n"
+    echo -e "usage: $script [-h|--help] [-i|--only-show-issues] [-n|--skip-nlfail] [-p|--skip-pending]\n"
 }
 
 # Set defaults
 skip_pending=0
 skip_nlfail=0
+only_show_issues=0
 
 # Args while-loop
 while [ "$1" != "" ];
@@ -24,8 +25,19 @@ do
             exit 0
             ;;
 
+        # Only show tests with issues (i.e., don't print pending, pass, or expected fail)
+        -i | --only-show-issues)
+            only_show_issues=1
+            ;;
+
         # Don't print NLFAIL tests
         -n | --skip-nlfail)
+            skip_nlfail=1
+            ;;
+
+        # Shortcuts for -i -n
+        -in | -ni)
+            only_show_issues=1
             skip_nlfail=1
             ;;
 
@@ -122,13 +134,17 @@ done
 for f in accounted*; do
     [[ $f == accounted_for_pend ]] && continue
     [[ $f == accounted_for_nlfail && ${skip_nlfail} -eq 1 ]] && continue
+    if [[ ${only_show_issues} -eq 1 ]]; then
+        [[ $f == accounted_for_pass ]] && continue
+        [[ $f == accounted_for_expectedFail ]] && continue
+    fi
     echo $f
     cat $f
     echo " "
 done
 
 # Print these last
-if [[ ${skip_pending} -eq 0 ]]; then
+if [[ ${skip_pending} -eq 0 && ${only_show_issues} -eq 0 ]]; then
     echo accounted_for_pend
     cat accounted_for_pend
     echo " "
