@@ -6,12 +6,12 @@ set -e
 script="test_summary.sh"
 function usage {
     echo " "
-    echo -e "usage: $script [-h|--help] [-i|--only-show-issues] [-n|--skip-nlfail] [-p|--skip-pending]\n"
+    echo -e "usage: $script [-h|--help] [-i|--only-show-issues] [-n|--quiet-nlfail] [-p|--quiet-pending]\n"
 }
 
 # Set defaults
-skip_pending=0
-skip_nlfail=0
+quiet_pending=0
+quiet_nlfail=0
 only_show_issues=0
 
 # Args while-loop
@@ -31,19 +31,19 @@ do
             ;;
 
         # Don't print NLFAIL tests
-        -n | --skip-nlfail)
-            skip_nlfail=1
+        -n | --quiet-nlfail)
+            quiet_nlfail=1
             ;;
 
         # Shortcuts for -i -n
         -in | -ni)
             only_show_issues=1
-            skip_nlfail=1
+            quiet_nlfail=1
             ;;
 
         # Don't print pending tests
-        -p  | --skip-pending)
-            skip_pending=1
+        -p  | --quiet-pending)
+            quiet_pending=1
             ;;
 
         *)
@@ -134,7 +134,7 @@ done
 for f in accounted*; do
     [[ $f == accounted_for_pend ]] && continue
     n=$(wc -l $f | cut -d" " -f1)
-    if [[ $f == accounted_for_nlfail && ${skip_nlfail} -eq 1 ]]; then
+    if [[ $f == accounted_for_nlfail && ${quiet_nlfail} -eq 1 ]]; then
         echo $f
         [[ $n -gt 0 ]] && echo "   $n tests had namelist diffs"
         echo " "
@@ -161,7 +161,7 @@ done
 
 # Print these last
 echo accounted_for_pend
-if [[ ${skip_pending} -eq 0 && ${only_show_issues} -eq 0 ]]; then
+if [[ ${quiet_pending} -eq 0 && ${only_show_issues} -eq 0 ]]; then
     cat accounted_for_pend
 else
     n=$(wc -l accounted_for_pend | cut -d" " -f1)
