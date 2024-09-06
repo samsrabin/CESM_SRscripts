@@ -55,6 +55,12 @@ do
     shift
 done
 
+# Check run_sys_tests command for limiters
+namelists_only=0
+if [[ $(head -n 1 SRCROOT_GIT_STATUS) == *"--namelists-only"* ]]; then
+    namelists_only=1
+fi
+
 #############################################################################################
 
 tmpfile=.test_summary.$(date "+%Y%m%d%H%M%S%N")
@@ -64,43 +70,55 @@ $(get_cs.status) > ${tmpfile}
 set +e
 
 # Account for completed tests
-grep -E "FAIL.*BASELINE exception" ${tmpfile} | awk '{print $2}' > accounted_for_baselineException
-grep -E "FAIL.*CREATE_NEWCASE" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_createCase
-grep -E "FAIL.*SHAREDLIB_BUILD" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_sharedlibBuild
-grep -E "FAIL.*MODEL_BUILD" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_modelBuild
-grep -E "FAIL.*RUN" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_runFail
-grep -E "PASS.*BASELINE" ${tmpfile} | awk '{print $2}' > accounted_for_pass
-grep -E "FAIL.*COMPARE_base_rest" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_compareBaseRest
-grep -E "FAIL.*COMPARE_base_modpes" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_compareBaseModpes
-grep -E "FAIL.*BASELINE.*otherwise" ${tmpfile} | awk '{print $2}' > accounted_for_fieldlist
-grep -E "FAIL.*BASELINE.*some baseline files were missing" ${tmpfile} | awk '{print $2}' > accounted_for_missingBaselineFiles
-grep -E "FAIL.*BASELINE.*baseline directory.*does not exist" ${tmpfile} | awk '{print $2}' > accounted_for_missingBaselineDir
-grep -E "EXPECTED FAILURE" ${tmpfile} | awk '{print $2}' > accounted_for_expectedFail
-grep -E "FAIL.*XML*" ${tmpfile} | awk '{print $2}' > accounted_for_xmlFail
+if [[ ${namelists_only} -eq 1 ]]; then
+    filename_pass="accounted_for_nlpass"
+else
+    grep -E "FAIL.*BASELINE exception" ${tmpfile} | awk '{print $2}' > accounted_for_baselineException
+    grep -E "FAIL.*CREATE_NEWCASE" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_createCase
+    grep -E "FAIL.*SHAREDLIB_BUILD" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_sharedlibBuild
+    grep -E "FAIL.*MODEL_BUILD" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_modelBuild
+    grep -E "FAIL.*RUN" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_runFail
+    filename_pass="accounted_for_pass"
+    grep -E "PASS.*BASELINE" ${tmpfile} | awk '{print $2}' > ${filename_pass} 
+    grep -E "FAIL.*COMPARE_base_rest" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_compareBaseRest
+    grep -E "FAIL.*COMPARE_base_modpes" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_compareBaseModpes
+    grep -E "FAIL.*BASELINE.*otherwise" ${tmpfile} | awk '{print $2}' > accounted_for_fieldlist
+    grep -E "FAIL.*BASELINE.*some baseline files were missing" ${tmpfile} | awk '{print $2}' > accounted_for_missingBaselineFiles
+    grep -E "FAIL.*BASELINE.*baseline directory.*does not exist" ${tmpfile} | awk '{print $2}' > accounted_for_missingBaselineDir
+    grep -E "EXPECTED FAILURE" ${tmpfile} | awk '{print $2}' > accounted_for_expectedFail
+    grep -E "FAIL.*XML*" ${tmpfile} | awk '{print $2}' > accounted_for_xmlFail
+fi
 
 # Add a file for tests that failed in NLCOMP, even if they're also in another accounted_for file
 grep -E "FAIL.*NLCOMP" ${tmpfile} | awk '{print $2}' > accounted_for_nlfail
 
-[[ -e accounted_for_truediffs ]] && rm accounted_for_truediffs
-touch accounted_for_truediffs
-for e in $(grep -E "FAIL.*BASELINE.*DIFF" ${tmpfile} | awk '{print $2}'); do
-    # Runs that fail because of restart diffs (can?) also show up as true baseline diffs. Only keep them as the former.
-    if [[ $(grep ${e} accounted_for_compareBaseRest | wc -l) -gt 0 ]]; then
-        continue
-    fi
-    # Some expected-fail runs complete but have diffs. Note those.
-    if [[ $(grep ${e} accounted_for_expectedFail | wc -l) -gt 0 ]]; then
-        echo "${e} (EXPECTED FAIL)" >> accounted_for_truediffs
-        continue
-    fi
-    echo ${e} >> accounted_for_truediffs
-done
+if [[ ${namelists_only} -eq 0 ]]; then
+    [[ -e accounted_for_truediffs ]] && rm accounted_for_truediffs
+    touch accounted_for_truediffs
+    for e in $(grep -E "FAIL.*BASELINE.*DIFF" ${tmpfile} | awk '{print $2}'); do
+        # Runs that fail because of restart diffs (can?) also show up as true baseline diffs. Only keep them as the former.
+        if [[ $(grep ${e} accounted_for_compareBaseRest | wc -l) -gt 0 ]]; then
+            continue
+        fi
+        # Some expected-fail runs complete but have diffs. Note those.
+        if [[ $(grep ${e} accounted_for_expectedFail | wc -l) -gt 0 ]]; then
+            echo "${e} (EXPECTED FAIL)" >> accounted_for_truediffs
+            continue
+        fi
+        echo ${e} >> accounted_for_truediffs
+    done
+fi
 
 # Account for pending tests
 [[ -e accounted_for_pend ]] && rm accounted_for_pend
 touch accounted_for_pend
-for t in $(grep -E "Overall: PEND" ${tmpfile} | awk '{print $1}' | sort); do
-    if [[ $(grep $t accounted_for_expectedFail | wc -l) -eq 0 ]]; then
+if [[ ${namelists_only} -eq 0 ]]; then
+    pattern="Overall: PEND"
+else
+    pattern="PEND .* NLCOMP"
+fi
+for t in $(grep -E "${pattern}" ${tmpfile} | awk '{print $1}' | sort); do
+    if [[ ! -e accounted_for_expectedFail || $(grep $t accounted_for_expectedFail | wc -l) -eq 0 ]]; then
         echo $t >> accounted_for_pend
     fi
 done
@@ -120,7 +138,7 @@ truly_unaccounted=""
 for d in ${missing_tests}; do
     n_fail_lines=$(grep $d ${tmpfile} | grep FAIL | grep -v "UNEXPECTED: expected FAIL" | wc -l)
     if [[ ${n_fail_lines} -eq 0 ]]; then
-        echo $d >> accounted_for_pass
+        echo $d >> ${filename_pass}
     else
         truly_unaccounted="${truly_unaccounted} $d"
     fi
@@ -141,7 +159,7 @@ for f in accounted*; do
         continue
     fi
     if [[ ${only_show_issues} -eq 1 ]]; then
-        if [[ $f == accounted_for_pass ]]; then
+        if [[ $f == ${filename_pass} ]]; then
             echo $f
             [[ $n -gt 0 ]] && echo "   $(wc -l $f | cut -d" " -f1) tests passed"
             echo " "
