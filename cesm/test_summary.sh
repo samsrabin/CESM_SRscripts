@@ -118,7 +118,7 @@ touch accounted_for_pend
 pattern="Overall: PEND"
 for t in $(grep -E "${pattern}" ${tmpfile} | awk '{print $1}' | sort); do
     if [[ ! -e accounted_for_expectedFail || $(grep $t accounted_for_expectedFail | wc -l) -eq 0 ]]; then
-        d="$(ls -d $t.*)"
+        d="$(ls -d $t.[GC0-9]*)"
         nfound=$(echo $d | wc -w)
         if [[ ${nfound} -eq 0 ]]; then
             echo "No directories found for test $t" >&2
