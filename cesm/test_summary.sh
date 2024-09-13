@@ -72,6 +72,7 @@ set +e
 # Account for completed tests
 if [[ ${namelists_only} -eq 1 ]]; then
     filename_pass="accounted_for_nlpass"
+    [[ -e ${filename_pass} ]] && rm ${filename_pass}
 else
     grep -E "FAIL.*BASELINE exception" ${tmpfile} | awk '{print $2}' > accounted_for_baselineException
     grep -E "FAIL.*CREATE_NEWCASE" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_createCase
