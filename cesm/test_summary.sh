@@ -65,6 +65,7 @@ fi
 
 tmpfile=.test_summary.$(date "+%Y%m%d%H%M%S%N")
 $(get_cs.status) > ${tmpfile}
+ntests=$(grep "Overall:" ${tmpfile} | wc -l)
 
 # We don't want the script to exit if grep finds no matches
 set +e
@@ -203,6 +204,14 @@ echo " "
 echo not_accounted_for
 cat not_accounted_for
 echo " "
+
+cat *accounted_for* | sort | uniq > all_tests
+n=$(cat all_tests | wc -l)
+if [[ ${n} -ne ${ntests} ]]; then
+    echo "ERROR: EXPECTED $ntests TESTS; MISSING $((ntests - n))" >&2
+    rm ${tmpfile}
+    exit 1
+fi
 
 rm ${tmpfile}
 exit 0
