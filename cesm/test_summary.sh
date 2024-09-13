@@ -63,6 +63,8 @@ fi
 
 #############################################################################################
 
+rm -f accounted_for_* all_tests
+
 tmpfile=.test_summary.$(date "+%Y%m%d%H%M%S%N")
 $(get_cs.status) > ${tmpfile}
 ntests=$(grep "Overall:" ${tmpfile} | wc -l)
@@ -73,7 +75,6 @@ set +e
 # Account for completed tests
 if [[ ${namelists_only} -eq 1 ]]; then
     filename_pass="accounted_for_nlpass"
-    [[ -e ${filename_pass} ]] && rm ${filename_pass}
 else
     grep -E "FAIL.*BASELINE exception" ${tmpfile} | awk '{print $2}' > accounted_for_baselineException
     grep -E "FAIL.*CREATE_NEWCASE" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_createCase
@@ -95,7 +96,6 @@ fi
 grep -E "FAIL.*NLCOMP" ${tmpfile} | awk '{print $2}' > accounted_for_nlfail
 
 if [[ ${namelists_only} -eq 0 ]]; then
-    [[ -e accounted_for_truediffs ]] && rm accounted_for_truediffs
     touch accounted_for_truediffs
     for e in $(grep -E "FAIL.*BASELINE.*DIFF" ${tmpfile} | awk '{print $2}'); do
         # Runs that fail because of restart diffs (can?) also show up as true baseline diffs. Only keep them as the former.
@@ -112,9 +112,7 @@ if [[ ${namelists_only} -eq 0 ]]; then
 fi
 
 # Account for pending tests
-[[ -e accounted_for_pend ]] && rm accounted_for_pend
 touch accounted_for_pend
-[[ -e accounted_for_nlbuildfail ]] && rm accounted_for_nlbuildfail
 pattern="Overall: PEND"
 for t in $(grep -E "${pattern}" ${tmpfile} | awk '{print $1}' | sort); do
     if [[ ! -e accounted_for_expectedFail || $(grep $t accounted_for_expectedFail | wc -l) -eq 0 ]]; then
@@ -158,7 +156,6 @@ for d in ${missing_tests}; do
         truly_unaccounted="${truly_unaccounted} $d"
     fi
 done
-rm -f not_accounted_for
 touch not_accounted_for
 for d in ${truly_unaccounted}; do
     grep $d ${tmpfile} >> not_accounted_for
