@@ -131,7 +131,7 @@ for t in $(grep -E "${pattern}" ${tmpfile} | awk '{print $1}' | sort); do
         result="$(grep -o "SETUP PASSED\|${build_nl_failed}" $f | tail -n 1)"
         if [[ "${result}" == "${build_nl_failed}" ]]; then
             echo $t >> accounted_for_nlbuildfail
-        else
+        elif [[ ${namelists_only} -eq 0 && $(grep $t accounted_for_nlfail | wc -l) -eq 0 ]]; then
             echo $t >> accounted_for_pend
         fi
     fi
