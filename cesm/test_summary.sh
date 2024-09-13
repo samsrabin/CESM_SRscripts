@@ -174,7 +174,7 @@ for f in accounted*; do
         fi
     fi
     echo $f
-    cat $f
+    cat $f | sort
     echo " "
 done
 
