@@ -21,12 +21,23 @@ fi
 function search_TestStatus {
     endpattern="----------"
     sed -n "/NLCOMP\$/,/${endpattern}/{p;/${endpattern}/q}" TestStatus.log
+    grep -A 999 "build-namelist failed" TestStatus.log
 }
 
 if [[ -e TestStatus.log ]]; then
     search_TestStatus
 elif [[ -e cs.status ]]; then
-    failing_tests="$(./cs.status | grep -oE "FAIL\s.*\sNLCOMP" | cut -d" " -f2)"
+    if [[ -e "accounted_for_nlfail" || -e "accounted_for_nlbuildfail" ]]; then
+        failing_tests=""
+        if [[ -e "accounted_for_nlfail" ]]; then
+            failing_tests="${failing_tests} $(cat accounted_for_nlfail)"
+        fi
+        if [[ -e "accounted_for_nlbuildfail" ]]; then
+            failing_tests="${failing_tests} $(cat accounted_for_nlbuildfail)"
+        fi
+    else
+        failing_tests="$(./cs.status | grep -oE "FAIL\s.*\sNLCOMP" | cut -d" " -f2)"
+    fi
     for t in ${failing_tests}; do
         echo $t
         get_test_nlcomp_section.sh ${t}*

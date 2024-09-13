@@ -113,14 +113,27 @@ fi
 # Account for pending tests
 [[ -e accounted_for_pend ]] && rm accounted_for_pend
 touch accounted_for_pend
-if [[ ${namelists_only} -eq 0 ]]; then
-    pattern="Overall: PEND"
-else
-    pattern="PEND .* NLCOMP"
-fi
+[[ -e accounted_for_nlbuildfail ]] && rm accounted_for_nlbuildfail
+pattern="Overall: PEND"
 for t in $(grep -E "${pattern}" ${tmpfile} | awk '{print $1}' | sort); do
     if [[ ! -e accounted_for_expectedFail || $(grep $t accounted_for_expectedFail | wc -l) -eq 0 ]]; then
-        echo $t >> accounted_for_pend
+        d="$(ls -d $t.*)"
+        nfound=$(echo $d | wc -w)
+        if [[ ${nfound} -eq 0 ]]; then
+            echo "No directories found for test $t" >&2
+            exit 1
+        elif [[ ${nfound} -gt 1 ]]; then
+            echo "Too many matching directories found for test $t" >&2
+            exit 1
+        fi
+        f=$d/TestStatus.log
+        build_nl_failed="build-namelist failed"
+        result="$(grep -o "SETUP PASSED\|${build_nl_failed}" $f | tail -n 1)"
+        if [[ "${result}" == "${build_nl_failed}" ]]; then
+            echo $t >> accounted_for_nlbuildfail
+        else
+            echo $t >> accounted_for_pend
+        fi
     fi
 done
 
