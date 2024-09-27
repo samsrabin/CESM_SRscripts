@@ -21,7 +21,9 @@ fi
 function search_TestStatus {
     endpattern="----------"
     sed -n "/NLCOMP\$/,/${endpattern}/{p;/${endpattern}/q}" TestStatus.log
+    set +e
     grep -A 999 "build-namelist failed" TestStatus.log
+    set -e
 }
 
 if [[ -e TestStatus.log ]]; then
