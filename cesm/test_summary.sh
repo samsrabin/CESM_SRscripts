@@ -66,7 +66,7 @@ fi
 rm -f accounted_for_* all_tests
 
 tmpfile=.test_summary.$(date "+%Y%m%d%H%M%S%N")
-excl_dir_pattern="SSPMATRIXCN_.*\.step\w+|ERI.*\.ref\w+|SSP.*\.ref\w+"
+excl_dir_pattern="SSPMATRIXCN_.*\.step\w+|ERI.*\.ref\w+|SSP.*\.ref\w+|RXCROPMATURITY.*\.\w+"
 $(get_cs.status) \
     | grep -vE "${excl_dir_pattern}" \
     > ${tmpfile}
