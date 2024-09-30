@@ -66,8 +66,9 @@ fi
 rm -f accounted_for_* all_tests
 
 tmpfile=.test_summary.$(date "+%Y%m%d%H%M%S%N")
+excl_dir_pattern="SSPMATRIXCN_.*\.step\w+|ERI.*\.ref\w+"
 $(get_cs.status) \
-    | grep -vE "SSPMATRIXCN_Ly5_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRs.izumi_intel.clm-ciso_monthly.*step*" \
+    | grep -vE "${excl_dir_pattern}" \
     > ${tmpfile}
 ntests=$(grep "Overall:" ${tmpfile} | wc -l)
 
@@ -118,7 +119,7 @@ touch accounted_for_pend
 pattern="Overall: PEND"
 for t in $(grep -E "${pattern}" ${tmpfile} | awk '{print $1}' | sort); do
     if [[ ! -e accounted_for_expectedFail || $(grep $t accounted_for_expectedFail | wc -l) -eq 0 ]]; then
-        d="$(ls -d $t.[GC0-9]* | grep -vE "SSPMATRIXCN_Ly5_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRs.izumi_intel.clm-ciso_monthly.*step*")"
+        d="$(ls -d $t.[GC0-9]* | grep -vE "${excl_dir_pattern}")"
         nfound=$(echo $d | wc -w)
         if [[ ${nfound} -eq 0 ]]; then
             echo "No directories found for test $t" >&2
