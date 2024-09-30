@@ -205,7 +205,7 @@ echo not_accounted_for
 cat not_accounted_for
 echo " "
 
-cat *accounted_for* | sort | uniq > all_tests
+cat *accounted_for* | grep -v "(EXPECTED FAIL)" | sort | uniq > all_tests
 n=$(cat all_tests | wc -l)
 if [[ ${n} -ne ${ntests} ]]; then
     echo "ERROR: EXPECTED $ntests TESTS; MISSING $((ntests - n))" >&2
