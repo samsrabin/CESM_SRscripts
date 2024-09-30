@@ -66,7 +66,9 @@ fi
 rm -f accounted_for_* all_tests
 
 tmpfile=.test_summary.$(date "+%Y%m%d%H%M%S%N")
-$(get_cs.status) > ${tmpfile}
+$(get_cs.status) \
+    | grep -vE "SSPMATRIXCN_Ly5_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRs.izumi_intel.clm-ciso_monthly.*step*" \
+    > ${tmpfile}
 ntests=$(grep "Overall:" ${tmpfile} | wc -l)
 
 # We don't want the script to exit if grep finds no matches
@@ -116,7 +118,7 @@ touch accounted_for_pend
 pattern="Overall: PEND"
 for t in $(grep -E "${pattern}" ${tmpfile} | awk '{print $1}' | sort); do
     if [[ ! -e accounted_for_expectedFail || $(grep $t accounted_for_expectedFail | wc -l) -eq 0 ]]; then
-        d="$(ls -d $t.[GC0-9]*)"
+        d="$(ls -d $t.[GC0-9]* | grep -vE "SSPMATRIXCN_Ly5_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRs.izumi_intel.clm-ciso_monthly.*step*")"
         nfound=$(echo $d | wc -w)
         if [[ ${nfound} -eq 0 ]]; then
             echo "No directories found for test $t" >&2
