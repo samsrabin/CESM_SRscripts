@@ -6,13 +6,14 @@ set -e
 script="test_summary.sh"
 function usage {
     echo " "
-    echo -e "usage: $script [-h|--help] [-i|--only-show-issues] [-n|--quiet-nlfail] [-p|--quiet-pending]\n"
+    echo -e "usage: $script [-h|--help] [-i|--only-show-issues] [-n|--quiet-nlfail] [-o|--outdir OUTPUT_DIRECTORY] [-p|--quiet-pending]\n"
 }
 
 # Set defaults
 quiet_pending=0
 quiet_nlfail=0
 only_show_issues=0
+outdir=
 
 # Args while-loop
 while [ "$1" != "" ];
@@ -41,6 +42,11 @@ do
             quiet_nlfail=1
             ;;
 
+        # Output directory
+        -o | --outdir | --out-dir) shift
+            outdir=$1
+            ;;
+
         # Don't print pending tests
         -p  | --quiet-pending)
             quiet_pending=1
@@ -63,17 +69,51 @@ fi
 
 #############################################################################################
 
-rm -f accounted_for_* all_tests
 
+# File where cs.status output will be saved
 tmpfile=.test_summary.$(date "+%Y%m%d%H%M%S%N")
+
+# Set output directory depending on whether user has write access here
+izumi_scratch_guess="/scratch/cluster/$USER"
+if [[ "${outdir}" == "" ]]; then
+    if [[ -w . ]]; then
+        outdir=.
+    elif [[ "$SCRATCH" != "" ]]; then
+        outdir="$SCRATCH/${tmpfile}"
+    elif [[ "${HOSTNAME}" == *"izumi"* && -w "${izumi_scratch_guess}" ]]; then
+        outdir="${izumi_scratch_guess}/${tmpfile}"
+    else
+        echo "-o/--outdir not provided but SCRATCH does not exist" >&2
+        exit 1
+    fi
+else
+    if [[ ! -d "${outdir}" ]]; then
+        mkdir -p "${outdir}"
+    fi
+    if [[ ! -w "${outdir}" ]]; then
+        echo "You don't have write permissions in provided -o/--outdir \"${outdir}\"" >&2
+        exit 1
+    fi
+fi
+if [[ "${outdir}" != . ]]; then
+    echo "Saving outputs to \"${outdir}/\""
+fi
+mkdir -p "${outdir}"
+tmpfile="${outdir}/${tmpfile}"
+
 excl_dir_pattern="SSPMATRIXCN_.*\.step\w+|ERI.*\.ref\w+|SSP.*\.ref\w+|RXCROPMATURITY.*\.\w+"
 $(get_cs.status) \
     | grep -vE "${excl_dir_pattern}" \
     > ${tmpfile}
 ntests=$(grep "Overall:" ${tmpfile} | wc -l)
 
+suitedir="$PWD"
+cd "${outdir}"
+
 # We don't want the script to exit if grep finds no matches
 set +e
+
+rm -f accounted_for_* all_tests
 
 # Account for completed tests
 if [[ ${namelists_only} -eq 1 ]]; then
@@ -114,12 +154,14 @@ if [[ ${namelists_only} -eq 0 ]]; then
     done
 fi
 
+set -e
+
 # Account for pending tests
 touch accounted_for_pend
 pattern="Overall: PEND"
 for t in $(grep -E "${pattern}" ${tmpfile} | awk '{print $1}' | sort); do
     if [[ ! -e accounted_for_expectedFail || $(grep $t accounted_for_expectedFail | wc -l) -eq 0 ]]; then
-        d="$(ls -d $t.[GC0-9]* | grep -vE "${excl_dir_pattern}")"
+        d="$(ls -d "${suitedir}"/$t.[GC0-9]* | grep -vE "${excl_dir_pattern}")"
         nfound=$(echo $d | wc -w)
         if [[ ${nfound} -eq 0 ]]; then
             echo "No directories found for test $t" >&2
