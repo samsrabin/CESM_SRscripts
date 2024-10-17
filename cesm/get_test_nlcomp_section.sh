@@ -28,7 +28,8 @@ function search_TestStatus {
 
 if [[ -e TestStatus.log ]]; then
     search_TestStatus
-elif [[ -e cs.status ]]; then
+else
+    cs_status_script=$(get_cs.status)
     if [[ -e "accounted_for_nlfail" || -e "accounted_for_nlbuildfail" ]]; then
         failing_tests=""
         if [[ -e "accounted_for_nlfail" ]]; then
@@ -38,7 +39,7 @@ elif [[ -e cs.status ]]; then
             failing_tests="${failing_tests} $(cat accounted_for_nlbuildfail)"
         fi
     else
-        failing_tests="$(./cs.status | grep -oE "FAIL\s.*\sNLCOMP" | cut -d" " -f2)"
+        failing_tests="$(./$cs_status_script | grep -oE "FAIL\s.*\sNLCOMP" | cut -d" " -f2)"
     fi
     for t in ${failing_tests}; do
         echo $t
@@ -46,9 +47,6 @@ elif [[ -e cs.status ]]; then
         echo " "
         echo " "
     done
-else
-    echo "Neither TestStatus.log nor cs.status found in $PWD" >&2
-    exit 1
 fi
 
 exit 0
