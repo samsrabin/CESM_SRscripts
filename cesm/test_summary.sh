@@ -113,7 +113,7 @@ cd "${outdir}"
 # We don't want the script to exit if grep finds no matches
 set +e
 
-rm -f accounted_for_* all_tests
+rm -f accounted_for_* all_tests not_accounted_for
 
 # Account for completed tests
 if [[ ${namelists_only} -eq 1 ]]; then
