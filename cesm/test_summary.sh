@@ -27,6 +27,7 @@ do
             ;;
 
         # Only show tests with issues (i.e., don't print pending, pass, or expected fail)
+        # Also, don't print lines for empty accounted_for_ files etc.
         -i | --only-show-issues)
             only_show_issues=1
             ;;
@@ -210,6 +211,7 @@ done
 for f in accounted*; do
     [[ $f == accounted_for_pend ]] && continue
     n=$(wc -l $f | cut -d" " -f1)
+    [[ ${n} -eq 0 && ${only_show_issues} -eq 1 ]] && continue
     if [[ $f == accounted_for_nlfail && ${quiet_nlfail} -eq 1 ]]; then
         echo $f
         [[ $n -gt 0 ]] && echo "   $n tests had namelist diffs"
@@ -236,17 +238,26 @@ for f in accounted*; do
 done
 
 # Print these last
-echo accounted_for_pend
-if [[ ${quiet_pending} -eq 0 && ${only_show_issues} -eq 0 ]]; then
-    cat accounted_for_pend
-else
-    n=$(wc -l accounted_for_pend | cut -d" " -f1)
-    [[ $n -gt 0 ]] && echo "   $n tests pending"
+
+# accounted_for_pend
+n=$(wc -l accounted_for_pend | cut -d" " -f1)
+if [[ ${n} -gt 0 || ${only_show_issues} -eq 0 ]]; then
+    echo accounted_for_pend
+    if [[ ${quiet_pending} -eq 0 && ${only_show_issues} -eq 0 ]]; then
+        cat accounted_for_pend
+    else
+        [[ $n -gt 0 ]] && echo "   $n tests pending"
+    fi
 fi
-echo " "
-echo not_accounted_for
-cat not_accounted_for
-echo " "
+
+# not_accounted_for
+n=$(wc -l not_accounted_for | cut -d" " -f1)
+if [[ ${n} -gt 0 || ${only_show_issues} -eq 0 ]]; then
+   echo " "
+   echo not_accounted_for
+   cat not_accounted_for
+   echo " "
+fi
 
 cat accounted_for* | grep -v "(EXPECTED FAIL)" | sort | uniq > all_tests
 grep "Overall" not_accounted_for | grep -v "(EXPECTED FAIL)" | sort | uniq >> all_tests
