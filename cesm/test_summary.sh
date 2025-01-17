@@ -208,6 +208,30 @@ for d in ${truly_unaccounted}; do
     grep $d ${tmpfile} >> not_accounted_for
 done
 
+# Izumi: Check for tests that failed in cleanup
+if [[ "$HOSTNAME" == *"izumi"* && $(cat accounted_for_runFail | wc -l) -gt 0 ]]; then
+    for t in $(cat accounted_for_runFail); do
+        d="$(ls -d ${t}\.*)"
+        n="$(echo $d | wc -w)"
+        if [[ $n -ne 1 ]]; then
+            echo "Expected 1 but found $n matches for $t: $d" >&2
+            exit 1
+        fi
+        last_cesm_log="$(find ${d} -name "cesm.log\.*" -print0 | xargs -0 ls -tr | grep -vE "\.gz$" | tail -n 1)"
+        if [[ $(echo ${last_cesm_log} | wc -w) -eq 0 ]]; then
+            continue
+        fi
+        if [[ "$(grep "med_finalize sysmem" ${last_cesm_log} | wc -l)" -gt 0 ]]; then
+            echo $t >> accounted_for_cleanupFail
+            sed -i "/^${t}$/d" accounted_for_runFail
+        fi
+    done
+fi
+
+#####################
+### Print results ###
+#####################
+
 for f in accounted*; do
     [[ $f == accounted_for_pend ]] && continue
     n=$(wc -l $f | cut -d" " -f1)
