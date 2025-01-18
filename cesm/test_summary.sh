@@ -288,7 +288,14 @@ grep "Overall" not_accounted_for | grep -v "(EXPECTED FAIL)" | sort | uniq >> al
 #grep "Overall" not_accounted_for | sort | uniq >> all_tests
 n=$(cat all_tests | wc -l)
 if [[ ${n} -ne ${ntests} ]]; then
-    echo "ERROR: EXPECTED $ntests TESTS; MISSING $((ntests - n))" >&2
+    n_missing=$((ntests - n))
+    echo "ERROR: EXPECTED $ntests TESTS; MISSING ${n_missing}" >&2
+    if [[ ${n_missing} -gt 0 ]]; then
+        for t in ${testlist}; do
+            n_thistest=$(grep -E "^$t$" *acc* | wc -l)
+            [[ ${n_thistest} -eq 0 ]] && echo "   $t"
+        done
+    fi
     rm ${tmpfile}
     exit 1
 fi
