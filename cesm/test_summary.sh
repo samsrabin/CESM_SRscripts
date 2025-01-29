@@ -221,7 +221,11 @@ if [[ "$HOSTNAME" == *"izumi"* && $(cat accounted_for_runFail | wc -l) -gt 0 ]];
         d="$(ls -d ${t}\.*)"
         n="$(echo $d | wc -w)"
         if [[ $n -ne 1 ]]; then
-            echo "Expected 1 but found $n matches for $t: $d" >&2
+            # https://github.com/ESCOMP/CTSM/issues/2913#issuecomment-2622943050
+            if [[ "${d}" == "SSPMATRIXCN"* && "${d}" == *"step0-AD"* && "${d}" == *"step1-SASU" ]]; then
+                continue
+            fi
+            echo -e "Expected 1 but found $n matches for $t: \n$d" >&2
             exit 1
         fi
         last_cesm_log="$(find ${d} -name "cesm.log\.*" -print0 | xargs -0 ls -tr | grep -vE "\.gz$" | tail -n 1)"
