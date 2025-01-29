@@ -125,6 +125,7 @@ else
     grep -E "FAIL.*SHAREDLIB_BUILD" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_sharedlibBuild
     grep -E "FAIL.*MODEL_BUILD" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_modelBuild
     grep -E "FAIL.*RUN" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_runFail
+    grep -E "FAIL.*TPUT" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_throughputFail
     filename_pass="accounted_for_pass"
     grep -E "PASS.*BASELINE" ${tmpfile} | awk '{print $2}' > ${filename_pass} 
     grep -E "FAIL.*COMPARE_base_rest" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_compareBaseRest
@@ -135,6 +136,12 @@ else
     grep -E "FAIL.*BASELINE.*CPRNC failed to open files" ${tmpfile} | awk '{print $2}' > accounted_for_cprncfailopen
     grep -E "EXPECTED FAILURE" ${tmpfile} | awk '{print $2}' > accounted_for_expectedFail
     grep -E "FAIL.*XML*" ${tmpfile} | awk '{print $2}' > accounted_for_xmlFail
+
+    # Some tests might have BASELINE PASS but TPUT FAIL. Remove them from accounted_for_pass.
+    for t in $(cat accounted_for_throughputFail); do
+        sed -i "/${t}/d" ${filename_pass}
+        #grep -oE "${t} TPUTCOMP.*" ${tmpfile} | sed "s/TPUTCOMP Error://"
+    done
 fi
 
 # Add a file for tests that failed in NLCOMP, even if they're also in another accounted_for file
