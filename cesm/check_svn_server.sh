@@ -3,9 +3,15 @@ set -e
 
 inputdata_parent="/fs/cgd/csm/inputdata"
 server_url="https://svn-ccsm-inputdata.cgd.ucar.edu/trunk/inputdata"
-
 files_to_check="$@"
 
+# Check that SVN server is reachable
+set +e
+if [[ ! $(ping_svn_server) ]]; then
+    echo "SVN server unreachable" >&2
+    exit 1
+fi
+set -e
 
 for f in ${files_to_check}; do
     # Make sure file is in the input data dir
