@@ -7,7 +7,7 @@ files_to_check="$@"
 
 # Check that SVN server is reachable
 set +e
-if [[ ! $(ping_svn_server) ]]; then
+if [[ $(/home/samrabin/scripts/cesm/ping_svn_server.sh) ]]; then
     echo "SVN server unreachable" >&2
     exit 1
 fi
