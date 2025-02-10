@@ -218,7 +218,7 @@ done
 # Izumi: Check for tests that failed in cleanup
 if [[ "$HOSTNAME" == *"izumi"* && $(cat accounted_for_runFail | wc -l) -gt 0 ]]; then
     for t in $(cat accounted_for_runFail); do
-        d="$(ls -d ${t}\.*)"
+        d="$(ls -d ${t}\.* | grep -Ev "ERI.*\.ref[0-9]")"
         n="$(echo $d | wc -w)"
         if [[ $n -ne 1 ]]; then
             # https://github.com/ESCOMP/CTSM/issues/2913#issuecomment-2622943050
