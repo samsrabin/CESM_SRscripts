@@ -248,26 +248,26 @@ for f in accounted*; do
     n=$(wc -l $f | cut -d" " -f1)
     [[ ${n} -eq 0 && ${only_show_issues} -eq 1 ]] && continue
     if [[ $f == accounted_for_nlfail && ${quiet_nlfail} -eq 1 ]]; then
-        echo $f
+        echo "$f ($n)"
         [[ $n -gt 0 ]] && echo "   $n tests had namelist diffs"
         echo " "
         continue
     fi
     if [[ ${only_show_issues} -eq 1 ]]; then
         if [[ $f == ${filename_pass} ]]; then
-            echo $f
+            echo "$f ($n)"
             [[ $n -gt 0 ]] && echo "   $(wc -l $f | cut -d" " -f1) tests passed"
             echo " "
             continue
         fi
         if [[ $f == accounted_for_expectedFail ]]; then
-            echo $f
+            echo "$f ($n)"
             [[ $n -gt 0 ]] && echo "   $(wc -l $f | cut -d" " -f1) tests failed as expected"
             echo " "
             continue
         fi
     fi
-    echo $f
+    echo "$f ($n)"
     cat $f | sort
     echo " "
 done
@@ -277,7 +277,7 @@ done
 # accounted_for_pend
 n=$(wc -l accounted_for_pend | cut -d" " -f1)
 if [[ ${n} -gt 0 || ${only_show_issues} -eq 0 ]]; then
-    echo accounted_for_pend
+    echo "accounted_for_pend ($n)"
     if [[ ${quiet_pending} -eq 0 && ${only_show_issues} -eq 0 ]]; then
         cat accounted_for_pend
     else
