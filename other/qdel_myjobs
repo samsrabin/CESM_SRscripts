@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# No set -e because qstat will exit 1 if user has no active jobs
+my_jobs="$(qstat -u $USER | grep -oE "^[0-9]+")"
+
+set -e
+if [[ "${my_jobs}" == "" ]]; then
+    echo "No active jobs found for user $USER"
+    exit 0
+fi
+
+echo "Will qdel these jobs: $(echo ${my_jobs})"
+while true; do
+    read -p "Proceed? " yn
+    case $yn in
+        [Yy]* ) qdel ${my_jobs}; break;;
+        [Nn]* ) exit 0;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
+exit 0
