@@ -136,6 +136,7 @@ else
     grep -E "FAIL.*BASELINE.*CPRNC failed to open files" ${tmpfile} | awk '{print $2}' > accounted_for_cprncfailopen
     grep -E "EXPECTED FAILURE" ${tmpfile} | awk '{print $2}' > accounted_for_expectedFail
     grep -E "FAIL.*XML*" ${tmpfile} | awk '{print $2}' > accounted_for_xmlFail
+    grep -E "FAIL.*SETUP*" ${tmpfile} | awk '{print $2}' > accounted_for_setupFail
 
     # Some tests might have BASELINE PASS but TPUT FAIL. Remove them from accounted_for_pass.
     for t in $(cat accounted_for_throughputFail); do
