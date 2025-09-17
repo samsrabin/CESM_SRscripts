@@ -124,7 +124,8 @@ else
     grep -E "FAIL.*CREATE_NEWCASE" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_createCase
     grep -E "FAIL.*SHAREDLIB_BUILD" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_sharedlibBuild
     grep -E "FAIL.*MODEL_BUILD" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_modelBuild
-    grep -E "FAIL.*RUN" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_runFail
+    grep -E "FAIL.*RUN" ${tmpfile} | grep "UNEXPECTED: expected PEND" | awk '{print $2}' > accounted_for_runFail
+    grep -E "FAIL.*RUN" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' >> accounted_for_runFail
     grep -E "FAIL.*TPUT" ${tmpfile} | grep -v "EXPECTED" | awk '{print $2}' > accounted_for_throughputFail
     filename_pass="accounted_for_pass"
     grep -E "PASS.*BASELINE" ${tmpfile} | awk '{print $2}' > ${filename_pass} 
