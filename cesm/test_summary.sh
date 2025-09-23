@@ -102,7 +102,7 @@ fi
 mkdir -p "${outdir}"
 tmpfile="${outdir}/${tmpfile}"
 
-excl_dir_pattern="SSPMATRIXCN_.*\.step\w+|ERI.*\.ref\w+|SSP.*\.ref\w+|RXCROPMATURITY.*\.\w+$|PVT.*\.potveg\w+"
+excl_dir_pattern="SSPMATRIXCN_.*\.step\w+|ERI.*\.ref\w+|SSP.*\.ref\w+|RXCROPMATURITY.*\.\w+$|PVT.*\.potveg\w*"
 $(get_cs.status) \
     | grep -vE "${excl_dir_pattern}" \
     > ${tmpfile}
