@@ -10,6 +10,7 @@ function usage {
 }
 
 # Set defaults
+debug=0
 quiet_pending=0
 quiet_nlfail=0
 only_show_issues=0
@@ -24,6 +25,11 @@ do
         -h | --help)
             usage
             exit 0
+            ;;
+
+        # Debug mode?
+        -d | --debug)
+            debug=1
             ;;
 
         # Only show tests with issues (i.e., don't print pending, pass, or expected fail)
@@ -310,9 +316,9 @@ if [[ ${n} -ne ${ntests} ]]; then
             [[ ${n_thistest} -eq 0 ]] && echo "   $t"
         done
     fi
-    rm ${tmpfile}
+    [[ $debug -eq 0 ]] && rm ${tmpfile} || echo tmpfile: $(basename $tmpfile)
     exit 1
 fi
 
-rm ${tmpfile}
+[[ $debug -eq 0 ]] && rm ${tmpfile} || echo tmpfile: $(basename $tmpfile)
 exit 0
