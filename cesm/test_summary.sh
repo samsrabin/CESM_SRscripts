@@ -106,13 +106,51 @@ if [[ "${outdir}" != . ]]; then
     echo "Saving outputs to \"${outdir}/\""
 fi
 mkdir -p "${outdir}"
-tmpfile="${outdir}/${tmpfile}"
+tmpfile="$(realpath "${outdir}/${tmpfile}")"
+if [[ ${debug} -eq 1 ]]; then
+    echo "tmpfile: $tmpfile"
+fi
+touch $tmpfile
 
-excl_dir_pattern="SSPMATRIXCN_.*\.step\w+|ERI.*\.ref\w+|SSP.*\.ref\w+|RXCROPMATURITY.*\.\w+$|PVT.*\.potveg\w*"
-$(get_cs.status) \
-    | grep -vE "${excl_dir_pattern}" \
-    > ${tmpfile}
-ntests=$(grep "Overall:" ${tmpfile} | wc -l)
+# Handle differently if we're calling from the baseline dir
+in_baseline_dir=$([[ "$PWD" == "$BASELINE"* ]] && echo 1 || echo 0)
+if [[ ${in_baseline_dir} -eq 1 ]]; then
+    echo "Running from baseline directory. This will take a while!"
+    testdir_list="$(ls -d */)"
+    ntests=$(echo $testdir_list | wc -w)
+    for d in ${testdir_list}; do
+        t=${d%?}
+        if [[ ${debug} -eq 1 ]]; then
+            echo ${t}...
+        fi
+        test_case_dir="$(grep -oE "\-envxml_dir .*" $(ls "${t}/CaseDocs/lnd_in"* | head -n 1) | cut -d" " -f2)"
+        test_case_dir_orig="${test_case_dir}"
+        while [[ ! -e "${test_case_dir}/TestStatus" ]]; do
+            test_case_dir="$(realpath ${test_case_dir}/..)"
+            if [[ "${test_case_dir}" == "/" ]]; then
+                echo "Failed to find test_case_dir from ${test_case_dir_orig}" >&2
+                exit 1
+            fi
+        done
+        if [[ ${debug} -eq 1 ]]; then
+            echo "    test_case_dir_orig: ${test_case_dir_orig}"
+            echo "    test_case_dir: ${test_case_dir}"
+        fi
+        # Do cs.status for every test because it's not guaranteed they all came from the same suite
+        cs_status=$(cd "${test_case_dir}/.." && get_cs.status --expect-exists)
+        (cd "${test_case_dir}/.." && ${cs_status} | grep " ${t} " >> "${tmpfile}")
+    done
+else
+    excl_dir_pattern="SSPMATRIXCN_.*\.step\w+|ERI.*\.ref\w+|SSP.*\.ref\w+|RXCROPMATURITY.*\.\w+$|PVT.*\.potveg\w*"
+    $(get_cs.status --expect-exists) \
+        | grep -vE "${excl_dir_pattern}" \
+        > ${tmpfile}
+    ntests=$(grep "Overall:" ${tmpfile} | wc -l)
+fi
+
+if [[ ${debug} -eq 1 ]]; then
+    echo ntests: $ntests
+fi
 
 suitedir="$PWD"
 cd "${outdir}"
@@ -318,7 +356,7 @@ if [[ ${n} -ne ${ntests} ]]; then
     echo "ERROR: EXPECTED $ntests TESTS; MISSING ${n_missing}" >&2
     if [[ ${n_missing} -gt 0 ]]; then
         for t in ${testlist}; do
-            n_thistest=$(grep -E "^$t$" *acc* | wc -l)
+            n_thistest=$(grep -E "^$t$" *accounted_for* | wc -l)
             [[ ${n_thistest} -eq 0 ]] && echo "   $t"
         done
     fi
