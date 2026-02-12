@@ -252,6 +252,12 @@ fi
 ### Print results ###
 #####################
 
+for f in *accounted*; do
+    mv $f $f.tmp
+    cat $f.tmp | sort | uniq > $f
+    rm $f.tmp
+done
+
 for f in accounted*; do
     [[ $f == accounted_for_pend ]] && continue
     n=$(wc -l $f | cut -d" " -f1)
