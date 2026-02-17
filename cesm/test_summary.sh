@@ -192,7 +192,12 @@ else
 fi
 
 # Add a file for tests that failed in NLCOMP, even if they're also in another accounted_for file
-grep -E "FAIL.*NLCOMP" ${tmpfile} | awk '{print $2}' > accounted_for_nlfail
+touch accounted_for_nlfail
+for t in $(grep -E "FAIL.*NLCOMP" ${tmpfile} | awk '{print $2}'); do
+    if [[ $(grep -E "^${t}$" accounted_for_missingBaselineDir | wc -l) -eq 0 ]]; then
+        echo $t >> accounted_for_nlfail
+    fi
+done
 
 if [[ ${namelists_only} -eq 0 ]]; then
     touch accounted_for_truediffs
