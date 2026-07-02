@@ -38,12 +38,6 @@ else
 fi
 
 for t in ${testlist}; do
-
-
-#if [[ $t != "ERR_"* ]]; then
-#    continue
-#fi
-
     cd $t
     echo $t
     
