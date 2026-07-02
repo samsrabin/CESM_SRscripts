@@ -1,8 +1,23 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
-baseline_dir=/glade/campaign/cgd/tss/ctsm_baselines/ctsm5.4.044
-test_suite_dir=/glade/derecho/scratch/sunjian/tests_0630-094247de
+# Get inputs
+baseline_dir="$1"
+test_suite_dir="$2"
+
+# Check inputs
+if [[ "${test_suite_dir}" == "" ]]; then
+    echo "Provide two positional args: baseline_dir and test_suite_dir" >&2
+    exit 1
+fi
+set -u
+if [[ ! -d "${baseline_dir}" ]]; then
+    echo "baseline_dir does not exist: ${baseline_dir}" >&2
+    exit 1
+elif [[ ! -d "${test_suite_dir}" ]]; then
+    echo "test_suite_dir does not exist: ${test_suite_dir}" >&2
+    exit 1
+fi
 
 module load nccmp
 
