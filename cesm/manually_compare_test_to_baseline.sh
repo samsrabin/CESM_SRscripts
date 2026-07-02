@@ -21,9 +21,23 @@ fi
 
 module load nccmp
 
+function get_test_name () {
+    local test_dir="$1"
+    (cd "${test_dir}" && ./xmlquery TEST_ARGV | grep -oE "\-testname \S*" | cut -d" " -f2)
+}
+
 cd "${baseline_dir}"
 
-for t in *; do
+# Handle user providing a test dir instead of a test SUITE dir
+if [[ -e "${test_suite_dir}/xmlquery" ]]; then
+    testlist="$(get_test_name "${test_suite_dir}")"
+    test_suite_dir="$(dirname "${test_suite_dir}")"
+# Otherwise, get list of tests from baseline
+else
+    testlist="$(ls)"
+fi
+
+for t in ${testlist}; do
 
 
 #if [[ $t != "ERR_"* ]]; then
@@ -46,7 +60,7 @@ for t in *; do
         # Try to figure out which matching dir is the actual test directory
         for m in ${test_dir}; do
             pushd "${m}" 1>/dev/null
-            testname="$(./xmlquery TEST_ARGV | grep -oE "\-testname \S*" | cut -d" " -f2)"
+            testname="$(get_test_name "${m}")"
             if [[ "${testname}" == "${t}" ]]; then
                 test_dir="${m}"
                 popd 1>/dev/null
