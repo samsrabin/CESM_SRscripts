@@ -199,6 +199,9 @@ for t in $(grep -E "FAIL.*NLCOMP" ${tmpfile} | awk '{print $2}'); do
     fi
 done
 
+# Add a file for tests that failed in MEMLEAK, even if they're also in another accounted_for file
+grep -E "FAIL.*MEMLEAK" ${tmpfile} | awk '{print $2}' > accounted_for_memleak
+
 if [[ ${namelists_only} -eq 0 ]]; then
     touch accounted_for_truediffs
     for e in $(grep -E "FAIL.*BASELINE.*DIFF" ${tmpfile} | awk '{print $2}'); do
